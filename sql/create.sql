@@ -1,37 +1,23 @@
-CREATE SCHEMA dbpedia;
+CREATE SCHEMA semmemdb;
 
 -- create tables
-CREATE TABLE dbpedia.entities (id INT PRIMARY KEY, name TEXT);
-CREATE TABLE dbpedia.relations (id INT PRIMARY KEY, name TEXT);
+CREATE TABLE semmemdb.entities (id INT PRIMARY KEY, name TEXT);
+CREATE TABLE semmemdb.relations (id INT PRIMARY KEY, name TEXT);
 
-CREATE TABLE dbpedia.relationships (sub INT, prop INT, obj INT);
-CREATE TABLE dbpedia.attributes (sub INT, prop INT, att TEXT);
-CREATE TABLE dbpedia.history (node INT, t DOUBLE PRECISION);
+CREATE TABLE semmemdb.relationships (sub INT, prop INT, obj INT);
+CREATE TABLE semmemdb.attributes (sub INT, prop INT, att TEXT);
+CREATE TABLE semmemdb.history (node INT, t DOUBLE PRECISION);
 
-CREATE TABLE dbpedia.query (node INT, w DOUBLE PRECISION);
+CREATE TABLE semmemdb.query (node INT, w DOUBLE PRECISION);
 
--- import csv 
-COPY dbpedia.entities FROM '/home/yang/semmemdb/csv/entities.csv' DELIMITERS ',' CSV;
-COPY dbpedia.relations FROM '/home/yang/semmemdb/csv/relations.csv' DELIMITERS ',' CSV;
-COPY dbpedia.relationships FROM '/home/yang/semmemdb/csv/relationships.csv' DELIMITERS ',' CSV;
-COPY dbpedia.attributes FROM '/home/yang/semmemdb/csv/attributes.csv' DELIMITERS ',' CSV;
--- COPY dbpedia.history FROM '/home/yang/semmemdb/csv/history.csv' DELIMITERS ',' CSV;
-
--- materialized views
-CREATE TABLE dbpedia.links AS
+-- views (may be materialized in materialize.sql)
+CREATE VIEW semmemdb.links AS
 SELECT sub AS node, COUNT(*) AS l
-FROM dbpedia.relationships
+FROM semmemdb.relationships
 GROUP BY sub;
 
-CREATE TABLE dbpedia.assoc AS
+CREATE VIEW semmemdb.assoc AS
 SELECT sub AS node1, obj AS node2, 2-ln((1+links.l)/COUNT(*)) AS s
-FROM dbpedia.relationships JOIN dbpedia.links
+FROM semmemdb.relationships JOIN semmemdb.links
 ON relationships.sub = links.node
 GROUP BY sub, obj, links.l;
-
--- indexes
-CREATE INDEX sub_index ON dbpedia.relationships (sub);
-CREATE INDEX obj_index ON dbpedia.relationships (obj);
-CREATE INDEX node1_index ON dbpedia.assoc (node1);
-CREATE INDEX node2_index ON dbpedia.assoc (node2);
-CREATE INDEX hist_index ON dbpedia.history (node);

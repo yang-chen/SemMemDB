@@ -1,15 +1,15 @@
-CREATE OR REPLACE FUNCTION dbpedia.activate()
+CREATE OR REPLACE FUNCTION semmemdb.activate()
 RETURNS TABLE(node INT, s DOUBLE PRECISION) AS $$
 BEGIN
   RETURN QUERY
   WITH Spreading AS (
     SELECT assoc.node2 AS node, SUM(query.w*assoc.s) AS s
-    FROM dbpedia.query JOIN dbpedia.assoc
+    FROM semmemdb.query JOIN semmemdb.assoc
     ON query.node = assoc.node1
     GROUP BY assoc.node2
   ), Base AS (
     SELECT history.node AS node, log(SUM(power(10-t,-0.5))) as b
-    FROM Spreading JOIN dbpedia.history
+    FROM Spreading JOIN semmemdb.history
     ON Spreading.node = history.node
     GROUP BY history.node
   )
